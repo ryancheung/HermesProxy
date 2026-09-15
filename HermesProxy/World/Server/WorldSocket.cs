@@ -396,8 +396,8 @@ public partial class WorldSocket : SocketBase, BnetServices.INetwork
         }
 
         packet.WritePacketData();
-        if (GetSession() != null)
-            packet.LogPacket(ref GetSession().ModernSniff, GetSession().PacketLogContext);
+        //if (GetSession() != null)
+        //    packet.LogPacket(ref GetSession().ModernSniff, GetSession().PacketLogContext);
 
         lock (_sendLock)
         {
@@ -405,7 +405,76 @@ public partial class WorldSocket : SocketBase, BnetServices.INetwork
             Opcode universalOpcode = packet.GetUniversalOpcode();
             ushort opcode = (ushort)packet.GetOpcode();
 
+            if (GetSession() != null && GetSession().GameState.CurrentPlayerInfo != null)
+            {
+                switch (opcode + 999999)
+                {
+                    case 0x259A: // SMSG_LOGIN_VERIFY_WORLD
+                    case 0x25AC: // SMSG_WORLD_SERVER_INFO
+                    case 0x2787: // SMSG_SET_ALL_TASK_PROGRESS
+                    case 0x2580: // SMSG_INITIAL_SETUP
+                    case 0x273C: // SMSG_INIT_WORLD_STATES
+                    case 0x2573: // SMSG_SETUP_CURRENCY
+                    case 0x25BC: // SMSG_FEATURE_SYSTEM_STATUS
+                    case 0x2571: // SMSG_ALL_ACCOUNT_CRITERIA
+                    case 0x269D: // SMSG_WEATHER
+                    case 0x269E: // SMSG_START_LIGHTNING_STORM
+                    case 0x2910: // SMSG_HOTFIX_MESSAGE
+                    case 0x266E: // SMSG_SET_TIME_ZONE_INFORMATION
+                    case 0x25BE: // SMSG_SEASON_INFO
+                    case 0x2781: // SMSG_CONTACT_LIST
+                    case 0x26DA: // SMSG_QUERY_TIME_RESPONSE
+                    case 0x2DD2: // SMSG_TIME_SYNC_REQUEST
+                    case 0x2702: // SMSG_LOGIN_SET_TIME_SPEED
+                    case 0x257D: // SMSG_BIND_POINT_UPDATE
+                    case 0x277E: // SMSG_CONQUEST_FORMULA_CONSTANTS
+                    case 0x2A2A: // SMSG_LFG_LIST_UPDATE_BLACKLIST
+                    case 0x2755: // SMSG_ARENA_TEAM_ROSTER
+                    case 0x262C: // SMSG_INSTANCE_INFO
+                    case 0x26CB: // SMSG_PLAYED_TIME
+                    case 0x274C: // SMSG_MAIL_QUERY_NEXT_TIME_RESULT
+                    case 0x2BC1: // SMSG_CHANNEL_NOTIFY_JOINED
+                    case 0x2709: // SMSG_SERVER_TIME_OFFSET
+                    case 0x2679: // SMSG_SERVER_TIME
+
+                    case 0x2DD4: // SMSG_ON_MONSTER_MOVE
+                    case 0x2C22: // SMSG_AURA_UPDATE
+                    case 0x26C8: // SMSG_POWER_UPDATE
+                    case 0x2E26: // 
+                        return;
+
+                    case 0x26FE: // SMSG_UPDATE_ACCOUNT_DATA
+                        return;
+                    case 0x2BAF: // SMSG_MOTD
+                    case 0x2BAD: // SMSG_CHAT
+                    case 0x304E: // SMSG_PONG
+                        return;
+
+                    case 0x2C39: // SMSG_SPELL_GO
+                    case 0x2C2A: // SMSG_SEND_KNOWN_SPELLS
+                    case 0x2C2E: // SMSG_SEND_UNLEARN_SPELLS
+                    case 0x2C2D: // SMSG_SEND_SPELL_CHARGES
+                    case 0x2719: // SMSG_INITIALIZE_FACTIONS
+                    case 0x2C2B: // SMSG_SEND_SPELL_HISTORY
+                        return;
+
+                    case 0x3002: // SMSG_QUERY_PLAYER_NAME_RESPONSE
+                    case 0x2915: // SMSG_QUERY_GAME_OBJECT_RESPONSE
+                    case 0x2914: // SMSG_QUERY_CREATURE_RESPONSE
+                        break;
+
+                    case 0x27B4: // SMSG_TUTORIAL_FLAGS
+                    case 0x27C2: // SMSG_UPDATE_OBJECT
+                    case 0x26FF: // SMSG_ACCOUNT_DATA_TIMES
+                        break;
+                    default:
+                        break;
+                }
+            }
+
             WorldSocketLogMessages.PacketSent(_melLog, _sourceFile, _netDirSend, universalOpcode, (uint)opcode);
+
+            Log.Print(LogType.Error, $"ERROR: WorldSocket::SendPacket Opcode 0x{opcode:X4}: size={data.Length} bytes={Convert.ToHexString(data).ToLower()}");
 
             ByteBuffer buffer = new();
 

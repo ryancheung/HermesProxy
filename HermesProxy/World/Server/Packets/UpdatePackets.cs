@@ -300,7 +300,16 @@ public class UpdateObject : ServerPacket
 
     public override void Write()
     {
-        NumObjUpdates = (uint)ObjectUpdates.Count;
+        uint gameObjCount = 0;
+        foreach (var update in ObjectUpdates)
+        {
+            if (update.GameObjectData != null)
+            {
+                gameObjCount++;
+            }
+        }
+
+        NumObjUpdates = (uint)ObjectUpdates.Count - gameObjCount;
         MapID = (ushort)_gameState.CurrentMapId!;
 
         _worldPacket.WriteUInt32(NumObjUpdates);
@@ -322,6 +331,10 @@ public class UpdateObject : ServerPacket
         WorldPacket data = new();
         foreach (var update in ObjectUpdates)
         {
+            if (update.GameObjectData != null)
+            {
+                continue;
+            }
             update.InitializePlaceholders();
             switch (ModernVersion.GetUpdateFieldsDefiningBuild())
             {
@@ -366,6 +379,8 @@ public class UpdateObject : ServerPacket
         Data = buffer.GetData();
 
         _worldPacket.WriteBytes(Data);
+        //Console.WriteLine($"[UpdateObject] NumObjUpdates={NumObjUpdates} MapID={MapID} OutOfRangeGuids={OutOfRangeGuids.Count} DestroyedGuids={DestroyedGuids.Count} DataLength={Data.Length}");
+        //Console.WriteLine("Send SMSG_UPDATE_OBJECT, size {0}, bytes {1}", _worldPacket.GetSize(), Convert.ToHexString(_worldPacket.GetData()));
     }
 
     GameSessionData _gameState;
